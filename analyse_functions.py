@@ -225,4 +225,42 @@ def get_actual_logs(test):
     
     return log_files
         
+def get_leftover_csv_files_if_found(test, actual_files, expected_files):
+    expected_files = expected_files.split("\n")
+    expected_files = [file.replace("'", "") for file in expected_files]
+    expected_files = [os.path.join(test, "run_1", file) for file in expected_files]
     
+    missing_files = list(set(expected_files) - set(actual_files))
+    
+    data_dir = os.path.dirname(test)
+    all_tests = [
+        os.path.join(data_dir, folder) 
+        for folder in os.listdir(data_dir) 
+        if os.path.isdir(os.path.join(data_dir, folder))
+    ]
+    
+    test_index = all_tests.index(test)
+    try:
+        next_test = all_tests[test_index + 1]
+        leftover_dir = os.path.join(next_test, "run_1", "leftovers")
+        if not os.path.exists(leftover_dir):
+            return []
+        
+        leftover_files = [
+            os.path.join(leftover_dir, file) 
+            for file in os.listdir(leftover_dir)
+        ]
+        
+        found_files = list( 
+            set(
+                [os.path.basename(file) for file in missing_files]
+            ).intersection(
+                set(
+                    [os.path.basename(file) for file in leftover_files]
+                )
+            )
+        )
+        
+        return found_files
+    except IndexError as e:
+        return []
