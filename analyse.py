@@ -1,6 +1,11 @@
 from analyse_functions import *
 
-testdir = "./data"
+if len(sys.argv) > 2:
+    testdir = sys.argv[1]
+    outputdir = sys.argv[2]
+else:
+    testdir = "./data"
+    outputdir = "./output"
 
 # ? Path doesn't exist.
 validate("if path exists", testdir)
@@ -47,65 +52,83 @@ table.add_column("Actual .csv files", no_wrap = False)
 table.add_column("Found in Leftovers", no_wrap = False)
 table.add_column("Log Files", no_wrap = False)
 
+successful_tests = []
+
 for test in testdirs:
-    progress_test = [progress_test for progress_test in progress_log_tests if progress_test["test"] in test][0]
-    
-    expected_test_duration_s = get_expected_duration_s(test)
-    actual_test_duration_s = parse_log_duration_to_s(progress_test["duration"])
+    with console.status(f"[{testdirs.index(test) + 1}/{len(testdirs)}] Analysing {test}"):
+        
+        progress_tests = [progress_test for progress_test in progress_log_tests if progress_test["test"] in test]
+        if len(progress_tests) == 0:
+            console.print(f"No test found in progress.log for {test}.", style="bold red")
+            continue
+        else:
+            progress_test = progress_tests[0]
+        
+        expected_test_duration_s = get_expected_duration_s(test)
+        actual_test_duration_s = parse_log_duration_to_s(progress_test["duration"])
 
-    duration_format = "white"    
-    if actual_test_duration_s < expected_test_duration_s:
-        duration_format = "red"
-    elif actual_test_duration_s > expected_test_duration_s:
-        duration_format = "blue"
-    else:
-        duration_format = "green"
-    
-    expected_csv_files = get_expected_csv_files(test)
-    
-    if expected_csv_files is None:
-        expected_csv_files = ""
-    else:
-        expected_csv_files = [os.path.basename(file) for file in expected_csv_files]
-        expected_csv_files = "\n".join(expected_csv_files)
-    
-    actual_csv_files = get_actual_csv_files(test)
+        duration_format = "white"    
+        if actual_test_duration_s < expected_test_duration_s:
+            duration_format = "red"
+        elif actual_test_duration_s > expected_test_duration_s:
+            duration_format = "blue"
+        else:
+            duration_format = "green"
+        
+        expected_csv_files = get_expected_csv_files(test)
+        
+        if expected_csv_files is None:
+            expected_csv_files = ""
+        else:
+            expected_csv_files = [os.path.basename(file) for file in expected_csv_files]
+            expected_csv_files = "\n".join(expected_csv_files)
+        
+        actual_csv_files = get_actual_csv_files(test)
 
-    if actual_csv_files is None:
-        actual_csv_files = ""
-    else:
-        actual_csv_files = "\n".join(actual_csv_files)
-    
-    found_csv_files = ""
-    if len(actual_csv_files) < len(expected_csv_files):
-        found_csv_files = "\n".join(get_leftover_csv_files_if_found(test, actual_csv_files, expected_csv_files))
+        if actual_csv_files is None:
+            actual_csv_files = ""
+        else:
+            actual_csv_files = "\n".join(actual_csv_files)
+        
+        found_csv_files = ""
+        if len(actual_csv_files) < len(expected_csv_files):
+            found_csv_files = "\n".join(get_leftover_csv_files_if_found(test, actual_csv_files, expected_csv_files))
+        else:
+            successful_tests.append(test)    
 
-    csv_files_format = "white"
-    if len(actual_csv_files) < len(expected_csv_files):
-        csv_files_format = "white on red"
-    else:
-        csv_files_format = "green"
-    
-    actual_logs = get_actual_logs(test)
-    if actual_logs is None:
-        actual_logs = ""
-    else:
-        actual_logs = [os.path.basename(log) for log in actual_logs]
-        actual_logs = "\n".join(actual_logs)
+        csv_files_format = "white"
+        if len(actual_csv_files) < len(expected_csv_files):
+            csv_files_format = "white on red"
+        else:
+            csv_files_format = "green"
+        
+        actual_logs = get_actual_logs(test)
+        if actual_logs is None:
+            actual_logs = ""
+        else:
+            actual_logs = [os.path.basename(log) for log in actual_logs]
+            actual_logs = "\n".join(actual_logs)
 
-    logs_format = "white"
-    
-    table.add_row(
-        os.path.basename(test),
-        f"[bold {duration_format}]{str(expected_test_duration_s)}[/bold {duration_format}]",
-        f"[bold {duration_format}]{str(actual_test_duration_s)}[/bold {duration_format}]",
-        f"[bold {csv_files_format}]{expected_csv_files}[/bold {csv_files_format}]",
-        f"[bold {csv_files_format}]{actual_csv_files}[/bold {csv_files_format}]",
-        f"{found_csv_files}",
-        f"[bold {logs_format}]{actual_logs}[/bold {logs_format}]"
-    )
+        logs_format = "white"
+        
+        table.add_row(
+            os.path.basename(test),
+            f"[bold {duration_format}]{str(expected_test_duration_s)}[/bold {duration_format}]",
+            f"[bold {duration_format}]{str(actual_test_duration_s)}[/bold {duration_format}]",
+            f"[bold {csv_files_format}]{expected_csv_files}[/bold {csv_files_format}]",
+            f"[bold {csv_files_format}]{actual_csv_files}[/bold {csv_files_format}]",
+            f"{found_csv_files}",
+            f"[bold {logs_format}]{actual_logs}[/bold {logs_format}]"
+        )
 
-console.print(table)
+# console.print(table)
 
-with open("output.html", "w") as f:
-    f.write(console.export_html())
+if "-copy" in sys.argv:
+    for test in successful_tests:
+        with console.status(f"[{successful_tests.index(test) + 1}/{len(successful_tests)}] Copying {os.path.basename(test)}..."):
+            src_dir = test
+            dest_dir = os.path.join(outputdir, os.path.basename(test))
+            shutil.copytree(src_dir, dest_dir)
+
+# with open("output.html", "w") as f:
+#     f.write(console.export_html())

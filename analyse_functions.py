@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import shutil
 
 from pprint import pprint
 from rich.console import Console
@@ -84,13 +85,16 @@ def get_progress_log_tests(progress_log):
                 "duration": None
             }
             
-            if 'TEST: ' in line:
+            if 'TEST ' in line:
                 line_index = file_contents.index(line)
                 start_time_index = line_index + 1
                 end_time_index = line_index + 2
                 duration_index = line_index + 3
                 
-                test["test"] = line.replace("TEST: ", "")
+                test['test'] = re.sub('TEST #\d*: ', '', line)
+                
+                # test["test"] = line.replace("TEST ", "")
+                
                 test["start_time"] = file_contents[start_time_index].replace(
                     "[1/1]: Started at ", 
                     ""
@@ -118,8 +122,8 @@ def get_expected_duration_s(test):
     if "s_" not in test:
         return 0
     else:
-        test = test.split("s_")[0]
-        duration_s = re.findall(r'\d+', test)[0]
+        test_duration_string = re.findall("\d\d*s_\d*", test)[0].split("_")[0]
+        duration_s = test_duration_string.replace("s", "")
         duration_s = int(duration_s)
 
         return duration_s
@@ -184,6 +188,9 @@ def get_run_contents(test):
     
     if not os.path.exists(run_dir):
         console.print(f'The test path {test} has no run_1 folder.', style="bold red")
+        console.print(f"Here is what is inside {test}:", style="bold red")
+        for item in os.listdir(test):
+            console.print(f"\t{item}", style="bold white")
         return
     
     run_contents = os.listdir(run_dir)
@@ -204,7 +211,7 @@ def get_actual_csv_files(test):
 def get_actual_logs(test):
     run_contents = get_run_contents(test)
     
-    log_dirs = [item for item in run_contents if 'log' in item]
+    log_dirs = [_ for _ in run_contents if "logs" in _]
     
     if len(log_dirs) == 0:
         console.print(f"The run_1 folder inside {test} has no logs folder.", style="bold red")
@@ -213,8 +220,9 @@ def get_actual_logs(test):
     log_dir = log_dirs[0]
     
     log_dir = os.path.join(test, "run_1", log_dir)
+    
     if not os.path.isdir(log_dir):
-        console.print(f"The log folder in {os.path.join(test, 'run_1')} is not a folder.", style="bold red")
+        console.print(f"{log_dir} is not a folder.", style="bold red")
         return
     
     log_files = os.listdir(log_dir)
@@ -261,6 +269,15 @@ def get_leftover_csv_files_if_found(test, actual_files, expected_files):
             )
         )
         
+        if len(found_files) > 0:
+            source_files = [os.path.join(next_test, "run_1", "leftovers", file) for file in found_files]
+            
+            for source_file in source_files:
+                destination = os.path.join(test, "run_1", os.path.basename(source_file))
+                shutil.copy(source_file, destination)
+                
+            console.print(f"Copied leftovers from {next_test} to {test}.", style="bold green")
+            
         return found_files
     except IndexError as e:
         return []
