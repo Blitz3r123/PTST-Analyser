@@ -4,5 +4,5 @@ Analyses the test results to identify if the tests were successfull (contain all
 
 ## Usage
 ```
-python analyse.py <tests_directory> <output_directory>
+python analyse.py <tests_directory> <output_directory> -copy
 ```
