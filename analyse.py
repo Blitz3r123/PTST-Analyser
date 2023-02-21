@@ -4,6 +4,7 @@ if len(sys.argv) > 2:
     testdir = sys.argv[1]
     outputdir = sys.argv[2]
 else:
+    console.print(f"Using ./data for testdir and ./output for output.", style="bold white")
     testdir = "./data"
     outputdir = "./output"
 
@@ -38,7 +39,7 @@ if not progress_log_tests:
     sys.exit(0)
     
 # ? Check number of test dirs matches the number of tests in progress.log
-if len(progress_log_tests) != len(testdirs):
+if len(progress_log_tests) < len(testdirs):
     console.print(f"Mismatch in number of tests found in the progress.log and the test folders found in {testdir}", style="bold red")
     console.print(f'\tprogress.log has {len(progress_log_tests)} tests while there are {len(testdirs)} test folders in {testdir}', style="bold white")
     sys.exit(0)
@@ -76,7 +77,7 @@ for test in testdirs:
             duration_format = "green"
         
         expected_csv_files = get_expected_csv_files(test)
-        
+
         if expected_csv_files is None:
             expected_csv_files = ""
         else:
@@ -84,6 +85,13 @@ for test in testdirs:
             expected_csv_files = "\n".join(expected_csv_files)
         
         actual_csv_files = get_actual_csv_files(test)
+        
+        actual_csv_filepaths = [os.path.join(test, "run_1", file) for file in actual_csv_files]
+        for filepath in actual_csv_filepaths:
+            filesize_bytes = os.path.getsize(filepath)
+            if filesize_bytes < 200:
+                console.print(f"{os.path.basename(filepath)} in {test} is smaller than 200 bytes.", style="bold red")
+                continue
 
         if actual_csv_files is None:
             actual_csv_files = ""
