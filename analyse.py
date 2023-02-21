@@ -121,14 +121,16 @@ for test in testdirs:
             f"[bold {logs_format}]{actual_logs}[/bold {logs_format}]"
         )
 
-# console.print(table)
+if "-table" in sys.argv or "-t" in sys.argv:
+    console.print(table)
 
-if "-copy" in sys.argv:
+if "-copy" in sys.argv or "-c" in sys.argv:
     for test in successful_tests:
         with console.status(f"[{successful_tests.index(test) + 1}/{len(successful_tests)}] Copying {os.path.basename(test)}..."):
             src_dir = test
             dest_dir = os.path.join(outputdir, os.path.basename(test))
             shutil.copytree(src_dir, dest_dir)
 
-# with open("output.html", "w") as f:
-#     f.write(console.export_html())
+if ("-table" in sys.argv or "-t" in sys.argv) and ("-html" in sys.argv):
+    with open("output.html", "w") as f:
+        f.write(console.export_html())
