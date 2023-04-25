@@ -56,9 +56,12 @@ for i, item in enumerate(all_statuses):
 assert( len(test_statuses) == len(camp_dir_tests) )
 
 total_tests_count = len(test_statuses)
+
 punctual_tests = [test for test in test_statuses if test['status'] == 'punctual']
 punctual_tests_count = len(punctual_tests)
+
 prolonged_tests = [test for test in test_statuses if test['status'] == 'prolonged']
+prolonged_tests_output = "\n".join(sorted([test['test'] for test in prolonged_tests]))
 prolonged_tests_count = len(prolonged_tests)
 
 # ? Find how many tests have expected number of files (that have data themselves).
@@ -71,14 +74,12 @@ for test in punctual_tests:
     if expected_file_count == actual_file_count:
         tests_with_expected_files.append(test)
         
-table = Table(title=f"Analysis of {campdir}", show_lines=True)
-
-table.add_column("Stat")
-table.add_column("Value")
+table = Table(title=f"Analysis of {campdir}", show_lines=True, show_header=False)
 
 table.add_row("Total Tests", f"{total_tests_count}")
-table.add_row("Punctual Tests", f"{punctual_tests_count}")
-table.add_row("Prolonged Tests", f"{prolonged_tests_count}")
+table.add_row(f"[bold green]Punctual Tests[/bold green]", f"[bold green]{punctual_tests_count}[/bold green]")
+table.add_row(f"[bold red]Prolonged Tests[/bold red]", f"[bold red]{prolonged_tests_count}[/bold red]")
 table.add_row("All Statuses (20 per row)", f"{all_statuses_output}")
+table.add_row("[bold red]Prolonged Tests[/bold red]", f"[bold red]{prolonged_tests_output}[/bold red]")
 
 console.print(table, style="bold white")
