@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import sys
+import webbrowser
 
 from pprint import pprint
 from rich.console import Console
