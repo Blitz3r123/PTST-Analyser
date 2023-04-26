@@ -111,23 +111,23 @@ with console.status("Building table..."):
 
 console.print(table, style="bold white")
 
-current_path = os.getcwd()
+dest_path = os.path.dirname(campdir)
 
-console.save_html(f"{campdir}_analysis.html")
-html_path = os.path.join( current_path, f"{campdir}_analysis.html" )
+html_path = os.path.join( dest_path, f"{os.path.basename(campdir)}_analysis.html" )
+console.save_html(html_path)
 
 # ? Write punctual and prolonged tests to file.
-with open( os.path.join( current_path, "punctual_tests.txt" ), "w" ) as f:
+with open( os.path.join( dest_path, f"{os.path.basename(campdir)}_punctual_tests.txt" ), "w" ) as f:
     for item in [test['test'] for test in punctual_tests]:
         f.write(f"{item}\n")
 
-with open( os.path.join( current_path, "prolonged_tests.txt" ), "w" ) as f:
+with open( os.path.join( dest_path, f"{os.path.basename(campdir)}_prolonged_tests.txt" ), "w" ) as f:
     for item in [test['test'] for test in prolonged_tests]:
         f.write(f"{item}\n")
 
 if "-open" in sys.argv:
     if os.name == 'nt':
-        os.startfile(current_path)
+        os.startfile(dest_path)
     else:
         opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
-        os.system('%s "%s"' % (opener, current_path))
+        os.system('%s "%s"' % (opener, dest_path))
