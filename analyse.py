@@ -1,6 +1,6 @@
 from analyse_functions import *
 
-if len(sys.argv) == 2:
+if len(sys.argv) >= 2:
     campdir = sys.argv[1]
 elif len(sys.argv) == 1:
     console.print(f"No <campaign_directory> passed. Refer to README.md to find out about usage.", style="bold red")
@@ -111,6 +111,23 @@ with console.status("Building table..."):
 
 console.print(table, style="bold white")
 
+current_path = os.getcwd()
+
 console.save_html(f"{campdir}_analysis.html")
-html_path = os.path.join( os.getcwd(), f"{campdir}_analysis.html" )
-webbrowser.open(f"file://{html_path}")
+html_path = os.path.join( current_path, f"{campdir}_analysis.html" )
+
+# ? Write punctual and prolonged tests to file.
+with open( os.path.join( current_path, "punctual_tests.txt" ), "w" ) as f:
+    for item in [test['test'] for test in punctual_tests]:
+        f.write(f"{item}\n")
+
+with open( os.path.join( current_path, "prolonged_tests.txt" ), "w" ) as f:
+    for item in [test['test'] for test in prolonged_tests]:
+        f.write(f"{item}\n")
+
+if "-open" in sys.argv:
+    if os.name == 'nt':
+        os.startfile(current_path)
+    else:
+        opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
+        os.system('%s "%s"' % (opener, current_path))
