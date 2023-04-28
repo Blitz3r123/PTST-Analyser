@@ -113,6 +113,7 @@ with console.status("Building table..."):
     table.add_row("Total Tests", f"{total_tests_count}")
     table.add_row(f"[bold green]Punctual Tests[/bold green]", f"[bold green]{punctual_tests_count}[/bold green]")
     table.add_row(f"[bold red]Prolonged Tests[/bold red]", f"[bold red]{prolonged_tests_count}[/bold red]")
+    table.add_row(f"[bold green]Usable Tests[/bold green]", f"[bold green]{len(tests_with_expected_files)}[/bold green]")
     table.add_row("All Statuses (20 per row)", f"{all_statuses_output}")
     table.add_row("[bold red]Prolonged Tests[/bold red]", f"[bold red]{prolonged_tests_output}[/bold red]")
     table.add_row("All Tests", all_statuses_as_text)
