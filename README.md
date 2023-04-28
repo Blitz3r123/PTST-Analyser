@@ -11,10 +11,11 @@ You pass in the folder directory and it will list the following:
 
 ## Usage
 ```
-python <campaign_directory>
+python <campaign_directory> -open
 ```
 
 `<campaign_directory>`: Directory pointing to the test campaign data.
+`-open`: Optional. Open the folder in Finder/Explorer.
 
 The `<campain_directory>` should contain the following file structure:
 ```
