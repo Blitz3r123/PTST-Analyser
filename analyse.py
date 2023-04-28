@@ -18,8 +18,10 @@ if len(camp_files) == 0:
     console.print(f"No files found in {campdir}. ", style="bold red")
     sys.exit()
     
-if os.path.join(campdir, "progress.json") not in camp_files:
-    console.print(f"No progress.json file found in {campdir}.", style="bold red")
+progress_json_files = [file for file in camp_files if "progress.json" in file]
+    
+if len(progress_json_files) == 0:
+    console.print(f"No progress.json files found in {campdir}.", style="bold red")
     sys.exit()
     
 # ? Get the .txt files.
@@ -34,22 +36,28 @@ with console.status(f"Reading tests from {campdir}..."):
     camp_dir_tests = [_ for _ in camp_files if os.path.isdir( _ )]
 
 with console.status("Reading progress.json..."):
-    # ? Get the test statuses from the progress.json.
-    with open(os.path.join(campdir, 'progress.json')) as f:
-        progress_data = json.load(f)
-        
-    test_statuses = progress_data
+    all_test_statuses = []
+    
+    for progress_json_file in progress_json_files:
+        # ? Get the test statuses from the progress.json.
+        with open(progress_json_file) as f:
+            progress_data = json.load(f)
+            
+        test_statuses = progress_data
 
-    # ? Cross reference the available files with the test status tests.
-    test_statuses = [item for item in test_statuses if item['test'] in [os.path.basename(_) for _ in camp_dir_tests] ]
+        # ? Cross reference the available files with the test status tests.
+        test_statuses = [item for item in test_statuses if item['test'] in [os.path.basename(_) for _ in camp_dir_tests] ]
+        all_test_statuses.append(test_statuses)
+        
+    all_test_statuses = sum(all_test_statuses, [])
 
 with console.status("Collecting test statuses..."):
     all_statuses = []
     all_statuses_as_text = []
     
-    test_statuses = sorted(test_statuses, key=lambda x: x['start_time'])
+    all_test_statuses = sorted(all_test_statuses, key=lambda x: x['start_time'])
     
-    for test in test_statuses:
+    for test in all_test_statuses:
         if "prolonged" in test['status'] or "fail" in test['status']:
             all_statuses.append("🔴")
             all_statuses_as_text.append(f"[bold red]{test['test']}[/bold red]")
@@ -66,25 +74,25 @@ with console.status("Collecting test statuses..."):
     all_statuses_as_text = "\n".join(all_statuses_as_text)
 
     try:
-        assert( len(test_statuses) >= len(camp_dir_tests) )
+        assert( len(all_test_statuses) >= len(camp_dir_tests) )
     except AssertionError as e:
         console.print(f"{e}", style="bold red")
         console.print(f"Tests not found in progress.json:", style="bold white")
-        tests_with_no_status = [test for test in camp_dir_tests if os.path.basename(test) not in [item['test'] for item in test_statuses]]
+        tests_with_no_status = [test for test in camp_dir_tests if os.path.basename(test) not in [item['test'] for item in all_test_statuses]]
         pprint(tests_with_no_status)
         console.print(f"\n", style="bold white")
 
         camp_dir_tests = [test for test in camp_dir_tests if test not in tests_with_no_status]
         
-        assert( len(test_statuses) >= len(camp_dir_tests) )
+        assert( len(all_test_statuses) >= len(camp_dir_tests) )
 
 with console.status("Counting punctual and prolonged tests..."):
-    total_tests_count = len(test_statuses)
+    total_tests_count = len(all_test_statuses)
 
-    punctual_tests = [test for test in test_statuses if test['status'] == 'punctual' or "success" in test['status']]
+    punctual_tests = [test for test in all_test_statuses if test['status'] == 'punctual' or "success" in test['status']]
     punctual_tests_count = len(punctual_tests)
 
-    prolonged_tests = [test for test in test_statuses if test['status'] == 'prolonged' or 'fail' in test['status']]
+    prolonged_tests = [test for test in all_test_statuses if test['status'] == 'prolonged' or 'fail' in test['status']]
     prolonged_tests_output = "\n".join(sorted([test['test'] for test in prolonged_tests]))
     prolonged_tests_count = len(prolonged_tests)
 
