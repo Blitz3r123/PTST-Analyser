@@ -107,7 +107,7 @@ for test in punctual_tests:
     if expected_file_count == actual_file_count:
         tests_with_expected_files.append(test)
             
-console.print("Building table..."):           
+console.print("Building table...")   
 table = Table(title=f"Analysis of {campdir}", show_lines=True, show_header=False)
 
 table.add_row("Total Tests", f"{total_tests_count}")
