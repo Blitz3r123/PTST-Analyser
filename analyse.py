@@ -43,8 +43,29 @@ for progress_json_file in progress_json_files:
     with open(progress_json_file) as f:
         progress_data = json.load(f)
         
-    test_statuses = progress_data
+    test_statuses = []
+        
+    for test in progress_data:
+        index = progress_data.index(test)
+        status = test["status"]
 
+        # ? Don't print the last test because it doesnt have a test after it to get leftovers from.
+        if index != len(progress_data) - 1:
+            
+            if "prolonged" in status:
+                next_test = progress_data[index + 1]
+                next_test_contents = os.listdir( os.path.join(campdir, test['test']) )
+                
+                if "leftovers" in next_test_contents:
+                    status = "punctual"
+        
+        test_statuses.append({
+            "test": test["test"],
+            "status": status,
+            "start_time": test["start_time"],
+            "end_time": test["end_time"]
+        })
+        
     # ? Cross reference the available files with the test status tests.
     test_statuses = [item for item in test_statuses if item['test'] in [os.path.basename(_) for _ in camp_dir_tests] ]
     all_test_statuses.append(test_statuses)
