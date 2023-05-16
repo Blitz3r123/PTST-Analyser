@@ -2,3 +2,7 @@ data/
 __pycache__/
 output/
 .DS_Store
+*_data_analysis.html
+*_prolonged_tests.txt
+*_punctual_tests.txt
+test_data/
