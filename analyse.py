@@ -46,6 +46,8 @@ for progress_json_file in progress_json_files:
     test_statuses = []
         
     for test in progress_data:
+        if test is None:
+            continue
         index = progress_data.index(test)
         status = test["status"]
 
